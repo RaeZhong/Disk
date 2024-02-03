@@ -1,23 +1,35 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
+import { createRouter, createWebHistory } from "vue-router";
+import VueCookies from "vue-cookies";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/',
-      name: 'home',
-      component: HomeView
+      path: "/login",
+      name: "Login",
+      component: () => import("@/views/Login.vue"),
     },
     {
-      path: '/about',
-      name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import('../views/AboutView.vue')
+      path: "/",
+      name: "Framework",
+      component: () => import("@/views/Framework.vue"),
+      meta:{
+        needLogin:true,
+      },
     }
-  ]
-})
+  ],
+});
 
-export default router
+router.beforeEach((to, from, next) => {
+  const userInfo = VueCookies.get("userInfo");
+  if (
+    to.meta.needLogin != null &&
+    to.meta.needLogin &&
+    userInfo == null
+  ) {
+    router.push("/login");
+  }
+  next();
+});
+
+export default router;

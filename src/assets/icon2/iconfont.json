@@ -1,0 +1,16 @@
+{
+  "id": "4370269",
+  "name": "disk",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon-",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "21009731",
+      "name": "logo",
+      "font_class": "logo",
+      "unicode": "f43e",
+      "unicode_decimal": 62526
+    }
+  ]
+}
