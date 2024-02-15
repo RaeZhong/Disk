@@ -4,54 +4,300 @@
       <div class="header">
         <div class="logo">
           <span class="iconfont icon-logo"></span>
-          <div class="name">
-            Disk
-          </div>
+          <div class="name">Disk</div>
         </div>
         <div class="right-panel">
-          <el-popover 
-          :width="800"
-          trigger="click"
-          v-model:visible="showUploarder"
-          :offset="20"
-          transition="none"
-          :hide-after="0"
-          :popper-style="{ padding:'0px' }"
-          >
-          <template #reference>
-            <span class="iconfont icon-transfer"></span>
-          </template>
-          <template #default>
-            <Uploader
-            ref="uploader"
-            @uploadCallback="uploadCallbackHandler"
-            ></Uploader>
-          </template>
+          <el-popover :width="800" trigger="click" v-model:visible="showUploarder" :offset="20" transition="none"
+            :hide-after="0" :popper-style="{ padding: '0px' }">
+            <template #reference>
+              <span class="iconfont icon-transfer"></span>
+            </template>
+            <template #default>
+              <Uploader ref="uploader" @uploadCallback="uploadCallbackHandler"></Uploader>
+            </template>
           </el-popover>
 
           <el-dropdown>
             <div class="user-info">
               <div class="avater">
-                <Avatar
-                  :userId="userInfo.userId"
-                  :avatar="userInfo.avatar"
-                  
-                ></Avatar>
+                <Avatar :userId="userInfo.userId" :avatar="userInfo.avatar" :timestamp="timestamp" :width="46"></Avatar>
               </div>
+              <span class="user-name">{{ userInfo.userName }}</span>
             </div>
-            <el-dropdown-menu></el-dropdown-menu>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item @click="updateAvater" class="message-item">
+                  修改头像
+                </el-dropdown-item>
+                <el-dropdown-item @click="updatePassword" class="message-item">
+                  修改密码
+                </el-dropdown-item>
+                <el-dropdown-item @click="logout" class="message-item">
+                  退出
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
           </el-dropdown>
         </div>
       </div>
+      <div class="body">
+        <div class="left-sider">
+          <div class="menu-list">
+            <div @click="jump(item)" :class="[
+              'menu-item',
+              item.menuCode == currentMenu.menuCode ? 'active' : '',
+            ]" v-for="item in menus">
+              <template v-if="item.allShow || (!item.allShow && userInfo.isAdmin)">
+                <div :class="['iconfont', 'icon-' + item.icon]"></div>
+                <div class="text">
+                  {{ item.name }}
+                </div>
+              </template>
+            </div>
+          </div>
+          <div class="menu-sub-list">
+            <div :class="['menu-item-sub', currentPath == sub.path ? 'active' : '']" @click="jump(sub)"
+              v-for="sub in currentMenu.children">
+              <span :class="['iconfont', 'icom-' + item.icon]" v-if="sub.icon"></span>
+              <span class="text">{{ sub.name }}</span>
+            </div>
+            <div class="tips" v-if="currentMenu && currentMenu.tips">
+              {{ currentMenu.tips }}
+            </div>
+            <div class="space-info">
+              <div>空间使用</div>
+              <div class="percent">
+                <el-progress :percentage="Math.floor(
+                  (userSpaceInfo.useSpace / useSpaceInfo.totalSpace) * 10000
+                ) / 100
+                  " color="#40eff">
+                </el-progress>
+              </div>
+
+              <div class="space-use">
+                <div class="use">
+                  {{ }}
+                  {{ }}
+                </div>
+                <div class="iconfont icon-refresh" @click="getUseSpace"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="body-content">
+          <router-view v-slot="{ Component }">
+            <component @addFile="addFile" ref="routerViewRef" :is="Component" @reload="getUseSpace">
+            </component>
+          </router-view>
+        </div>
+      </div>
+      <!--修改头像-->
+      <UpdateAvatar ref="updateAvatarRef" @updateAvatar="reloadAvatar"></UpdateAvatar>
+      <!--修改密码-->
+      <UpdatePassword ref="updatePasswordRef"></UpdatePassword>
     </div>
   </div>
 </template>
 
 <script>
+import { nextTick } from 'vue';
+import UpdateAvatar from '@/views/UpdateAvatar';
+import UpdatePassword from '@/views/UpdatePassword';
+import { useRouter, useRoute } from "vue-router"
+const router = useRouter();
+const route = useRoute();
+
+export default {
+  data() {
+    return {
+      userInfo: {},
+      //上传窗口
+      showUploarder: false,
+      timestamp: 0,
+      //添加的文件
+      uploaderRef: null,
+      //文件回调
+      routerViewRef: null,
+
+      //路由
+      menus: [
+        {
+          icon: "cloude",
+          name: "首页",
+          menuCode: "main",
+          path: "/main/all",
+          allShow: true,
+          children: [
+            {
+              icon: "all",
+              name: "全部",
+              category: "all",
+              path: "/main/all",
+            },
+            {
+              icon: "video",
+              name: "视频",
+              category: "video",
+              path: "/main/video",
+            },
+            {
+              icon: "music",
+              name: "音频",
+              category: "music",
+              path: "/main/music",
+            },
+            {
+              icon: "image",
+              name: "图片",
+              category: "image",
+              path: "/main/image",
+            },
+            {
+              icon: "doc",
+              name: "文档",
+              category: "doc",
+              path: "/main/doc",
+            },
+            {
+              icon: "more",
+              name: "其他",
+              category: "others",
+              path: "/main/others",
+            },
+          ],
+        },
+        {
+          path: "/myshare",
+          icon: "share",
+          name: "分享",
+          menuCode: "share",
+          allShow: true,
+          children: [
+            {
+              name: "分享记录",
+              path: "/myshare",
+            },
+          ],
+        },
+        {
+          path: "/recycle",
+          icon: "del",
+          name: "回收站",
+          menuCode: "recycle",
+          tips: "回收站为你保存10天内删除的文件",
+          allShow: true,
+          children: [
+            {
+              name: "删除的文件",
+              path: "/recycle",
+            },
+          ],
+        },
+        {
+          path: "/settings/fileList",
+          icon: "settings",
+          name: "设置",
+          menuCode: "settings",
+          allShow: false,
+          children: [
+            {
+              name: "用户文件",
+              path: "/settings/fileList",
+            },
+            {
+              name: "用户管理",
+              path: "/settings/userList",
+            },
+            {
+              path: "/settings/sysSetting",
+              name: "系统设置",
+            },
+          ],
+        },
+      ],
+      currentMenu: null,
+      currentPath: null,
+
+      useSpaceInfo: {useSpace:0,totalSpace:1},
+
+      updateAvatarRef: null,
+      updatePasswordRef: null,
+    };
+  },
+  created() {
+    this.userInfo = this.$cookies.get("loginInfo");
+  },
+  methods: {
+    addFile(data) {
+      const { file, filePid } = data;
+      this.showUploarder = true;
+      this.uploaderRef.addFile(file, filePid);
+    },
+    uploadCallbackHandler() {
+      nextTick(() => {
+        this.routerViewRef.reload();
+        getUseSpace();
+      });
+    },
+    jump(data) {
+      if (data.path || data.menuCode == currentMenu.menuCode) {
+        return;
+      }
+      route.push(data.path);
+    },
+    setMenu(menuCode, path) {
+      const menu = this.menus.find((item) => {
+        return item.menuCode === menuCode;
+      });
+      this.currentMenu = menu;
+      this.currentPath = path;
+    },
+    getUseSpace(){
+      let res = await Request({
+        url: 1,
+        showLoading: false,
+      });
+      if(!res) return;
+      this.useSpaceInfo = res.data;
+    },
+    updateAvatar(){
+      this.updateAvatarRef.show(this.userInfo);
+    },
+    reloadAvatar(){
+      this.userInfo = this.$cookies.get("userInfo");
+      this.timestamp = new Date.getTime();
+    },
+    updatePassword(){
+      this.updatePasswordRef.show();
+    },
+    logout(){
+      confirm(`你确定要删除退出吗`,async() => {
+        let res = await Request({
+          url:2,
+        });
+        if(!res) return;
+        router.push("/login");
+      })
+    }
+  },
+  watch: {
+    'route': {
+      handler(newVal, oldVal) {
+        if (newVal.meta, menuCode) {
+          this.setMenu(newVal.meta.menuCode, newVal.path);
+        }
+      },
+      deep:true,
+      immediate:true
+    },
+
+
+  }
+};
 </script>
 
 <style lang="scss" scoped>
-.header{
+.header {
   box-shadow: 0 3px 10px 0 rgb(0 0 0 / 6%);
   height: 56px;
   padding: 0 24px;
@@ -61,24 +307,26 @@
   align-items: center;
   justify-content: space-between;
 
-  .logo{
+  .logo {
     display: flex;
     align-items: center;
-    .icon-logo{
+
+    .icon-logo {
       font-size: 40px;
       color: #a9b0ff;
     }
-    .name{
+
+    .name {
       font-weight: bold;
       margin-left: 5px;
       font-size: 25px;
       color: #8d96de;
     }
   }
-  .right-panel {
-      display: flex;
-      align-items: center;
-    }
-}
 
+  .right-panel {
+    display: flex;
+    align-items: center;
+  }
+}
 </style>
