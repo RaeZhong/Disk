@@ -369,7 +369,7 @@ export default {
             message.success("登陆成功");
             this.$cookies.set("userInfo", result.data, 0);
             console.log(this.$cookies.keys);
-            const redirectUrl = this.$route.query.redirect || '/'
+            const redirectUrl = this.$route.query.redirectUrl || '/'
             this.$router.push(redirectUrl);
           }else if(this.opType == 2){
             message.success("重置密码成功，请登录");

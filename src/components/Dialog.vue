@@ -1,16 +1,7 @@
 <template>
   <div>
-    <el-dialog
-      :show-close="showClose"
-      :draggable="true"
-      :model-value="show"
-      :close-on-click-modal="false"
-      :title="title"
-      class="cust-dialog"
-      :top="top + 'px'"
-      :width="width"
-      @close="close"
-    >
+    <el-dialog :show-close="showClose" :draggable="true" :model-value="show" :close-on-click-modal="false" :title="title"
+      class="cust-dialog" :top="top + 'px'" :width="width" @close="close">
       <div class="dialog-body" :style="dialogBodyStyle">
         <slot></slot>
       </div>
@@ -46,9 +37,21 @@ export default {
       type: Boolean,
       default: true,
     },
+    top: {
+      type: Number,
+      default: 50,
+    },
+    width: {
+      type: String,
+      default: "30%",
+    },
     buttons: {
       type: Array,
     },
+    padding: {
+      type: Number,
+      default: 15,
+    }
   },
   data() {
     return {
@@ -70,12 +73,15 @@ export default {
 <style lang="scss" scoped>
 .cust-dialog {
   margin: 30px auto 10px !important;
-  .el-dialog__body {
+
+  .el-dialog-body {
     padding: 0;
   }
+
   .dialog-body {
     overflow: auto;
   }
+
   .dialog-footer {
     text-align: right;
     padding: 5px 20px;

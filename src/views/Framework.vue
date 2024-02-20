@@ -19,14 +19,14 @@
 
           <el-dropdown>
             <div class="user-info">
-              <div class="avater">
+              <div class="avatar">
                 <Avatar :userId="userInfo.userId" :avatar="userInfo.avatar" :timestamp="timestamp" :width="46"></Avatar>
               </div>
               <span class="user-name">{{ userInfo.userName }}</span>
             </div>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item @click="updateAvater" class="message-item">
+                <el-dropdown-item @click="updateAvatar" class="message-item">
                   修改头像
                 </el-dropdown-item>
                 <el-dropdown-item @click="updatePassword" class="message-item">
@@ -56,9 +56,11 @@
             </div>
           </div>
           <div class="menu-sub-list">
-            <div :class="['menu-item-sub', currentPath == sub.path ? 'active' : '']" @click="jump(sub)"
+            <div 
+              :class="['menu-item-sub', currentPath == sub.path ? 'active' : '']" 
+              @click="jump(sub)"
               v-for="sub in currentMenu.children">
-              <span :class="['iconfont', 'icom-' + item.icon]" v-if="sub.icon"></span>
+              <span :class="['iconfont', 'icon-' + sub.icon]" v-if="sub.icon"></span>
               <span class="text">{{ sub.name }}</span>
             </div>
             <div class="tips" v-if="currentMenu && currentMenu.tips">
@@ -68,7 +70,7 @@
               <div>空间使用</div>
               <div class="percent">
                 <el-progress :percentage="Math.floor(
-                  (userSpaceInfo.useSpace / useSpaceInfo.totalSpace) * 10000
+                  (useSpaceInfo.useSpace / useSpaceInfo.totalSpace) * 10000
                 ) / 100
                   " color="#40eff">
                 </el-progress>
@@ -101,13 +103,17 @@
 
 <script>
 import { nextTick } from 'vue';
-import UpdateAvatar from '@/views/UpdateAvatar';
-import UpdatePassword from '@/views/UpdatePassword';
-import { useRouter, useRoute } from "vue-router"
-const router = useRouter();
-const route = useRoute();
+import request from "@/utils/Request.js";
+import UpdateAvatar from './updateAvatar.vue';
+import UpdatePassword from './UpdatePassword.vue';
+import Uploader from "@/views/main/Uploader.vue";
+import Avatar from '@/components/Avatar.vue';
+import frameApi from '@/api/frame.js';
 
 export default {
+  components: {
+    UpdateAvatar, UpdatePassword, Avatar, Uploader
+  },
   data() {
     return {
       userInfo: {},
@@ -215,17 +221,17 @@ export default {
           ],
         },
       ],
-      currentMenu: null,
+      currentMenu: {},
       currentPath: null,
 
-      useSpaceInfo: {useSpace:0,totalSpace:1},
+      useSpaceInfo: { useSpace: 0, totalSpace: 1 },
 
       updateAvatarRef: null,
       updatePasswordRef: null,
     };
   },
   created() {
-    this.userInfo = this.$cookies.get("loginInfo");
+    this.userInfo = this.$cookies.get("userInfo");
   },
   methods: {
     addFile(data) {
@@ -240,10 +246,10 @@ export default {
       });
     },
     jump(data) {
-      if (data.path || data.menuCode == currentMenu.menuCode) {
+      if (!data.path || data.menuCode == this.currentMenu.menuCode) {
         return;
       }
-      route.push(data.path);
+      this.$router.push(data.path);
     },
     setMenu(menuCode, path) {
       const menu = this.menus.find((item) => {
@@ -252,46 +258,44 @@ export default {
       this.currentMenu = menu;
       this.currentPath = path;
     },
-    getUseSpace(){
-      let res = await Request({
-        url: 1,
+    async getUseSpace() {
+      let res = await request({
+        url: frameApi.getUseSpace,
         showLoading: false,
       });
-      if(!res) return;
+      if (!res) return;
       this.useSpaceInfo = res.data;
     },
-    updateAvatar(){
-      this.updateAvatarRef.show(this.userInfo);
+    updateAvatar() {
+      this.$refs.updateAvatarRef.show(this.userInfo);
     },
-    reloadAvatar(){
+    reloadAvatar() {
       this.userInfo = this.$cookies.get("userInfo");
       this.timestamp = new Date.getTime();
     },
-    updatePassword(){
+    updatePassword() {
       this.updatePasswordRef.show();
     },
-    logout(){
-      confirm(`你确定要删除退出吗`,async() => {
-        let res = await Request({
-          url:2,
+    logout() {
+      confirm(`你确定要删除退出吗`, async () => {
+        let res = await request({
+          url: frameApi.logout,
         });
-        if(!res) return;
-        router.push("/login");
+        if (!res) return;
+        this.$router.push("/login");
       })
     }
   },
   watch: {
-    'route': {
+    $route: {
       handler(newVal, oldVal) {
-        if (newVal.meta, menuCode) {
+        if (newVal.meta.menuCode) {
           this.setMenu(newVal.meta.menuCode, newVal.path);
         }
       },
-      deep:true,
-      immediate:true
+      deep: true,
+      immediate: true
     },
-
-
   }
 };
 </script>
@@ -327,6 +331,151 @@ export default {
   .right-panel {
     display: flex;
     align-items: center;
+
+    .icon-transfer {
+      cursor: pointer;
+    }
+
+    .user-info {
+      margin-right: 10px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+
+      .avatar {
+        margin: 0px 5px 0px 15px;
+      }
+
+      .user-name {
+        color: #a9b0ff;
+      }
+    }
   }
+}
+
+.body {
+  display: flex;
+
+  .left-sider {
+    border-right: 1px solid #f1f2f4;
+    display: flex;
+
+    .menu-list {
+      height: calc(100vh - 56px);
+      width: 80px;
+      box-shadow: 0 3px 10px 0 rgb(0 0 0 / 6%);
+      border-right: 1px solid #f1f2f4;
+
+      .menu-item {
+        text-align: center;
+        font-size: 14px;
+        font-weight: bold;
+        padding: 20px 0px;
+        cursor: pointer;
+
+        &:hover {
+          background: #f3f3f3;
+        }
+
+        .iconfont {
+          font-weight: normal;
+          font-size: 28px;
+          color: #7e7e7e;
+        }
+
+        .text{
+          color: #7e7e7e;
+        }
+      }
+
+      .active {
+        .iconfont {
+          color: #a9b0ff;
+        }
+        .text {
+          color: #8b95fb;
+        }
+      }
+    }
+
+    .menu-sub-list {
+      width: 200px;
+      padding: 20px 10px 0px;
+      position: relative;
+
+      .menu-item-sub {
+        text-align: center;
+        line-height: 40px;
+        border-radius: 5px;
+        cursor: pointer;
+
+        &:hover {
+          background: #f3f3f3;
+        }
+
+        .iconfont {
+          font-size: 14px;
+          margin-right: 20px;
+          color: #7e7e7e;
+        }
+
+        .text {
+          font-size: 13px;
+          font-weight: 500;
+          color:#5b5b5b;
+        }
+      }
+
+      .active {
+        background: #eef9fe;
+        .iconfont {
+          color: #a9b0ff;
+        }
+        .text {
+          color: #8b95fb;
+        }
+      }
+
+      .tips {
+        margin-top: 10px;
+        color: #888888;
+        font-size: 13px;
+      }
+
+      .space-info {
+        position: absolute;
+        bottom: 10px;
+        width: 100%;
+        padding: 0px 5px;
+
+        .percent {
+          padding-right: 10px;
+        }
+
+        .space-use {
+          margin-top: 5px;
+          color: #7e7e7e;
+          display: flex;
+          justify-content: space-around;
+
+          .use {
+            flex: 1;
+          }
+
+          .iconfont {
+            cursor: pointer;
+            margin-right: 20px;
+            color:  #a9b0ff;
+          }
+        }
+      }
+    }
+  }
+}
+
+.body-content {
+  flex: 1;
+  width: 0;
+  padding-left: 20px;
 }
 </style>

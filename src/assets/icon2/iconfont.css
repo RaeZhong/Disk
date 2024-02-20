@@ -1,8 +1,8 @@
 @font-face {
   font-family: "iconfont"; /* Project id 4370269 */
-  src: url('iconfont.woff2?t=1702377085124') format('woff2'),
-       url('iconfont.woff?t=1702377085124') format('woff'),
-       url('iconfont.ttf?t=1702377085124') format('truetype');
+  src: url('iconfont.woff2?t=1708340601167') format('woff2'),
+       url('iconfont.woff?t=1708340601167') format('woff'),
+       url('iconfont.ttf?t=1708340601167') format('truetype');
 }
 
 .iconfont {
@@ -11,6 +11,90 @@
   font-style: normal;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-settings:before {
+  content: "\e6c3";
+}
+
+.icon-transfer:before {
+  content: "\e6b4";
+}
+
+.icon-del:before {
+  content: "\e607";
+}
+
+.icon-huishouzhan-copy:before {
+  content: "\f448";
+}
+
+.icon-share:before {
+  content: "\e655";
+}
+
+.icon-image:before {
+  content: "\e63a";
+}
+
+.icon-cloude:before {
+  content: "\e639";
+}
+
+.icon-video:before {
+  content: "\e650";
+}
+
+.icon-more:before {
+  content: "\e629";
+}
+
+.icon-doc:before {
+  content: "\e67a";
+}
+
+.icon-all:before {
+  content: "\e663";
+}
+
+.icon-music:before {
+  content: "\e60a";
+}
+
+.icon-fenxiang-copy:before {
+  content: "\f43f";
+}
+
+.icon-tupian-copy:before {
+  content: "\f440";
+}
+
+.icon-shouye-copy:before {
+  content: "\f441";
+}
+
+.icon-shipin-copy:before {
+  content: "\f442";
+}
+
+.icon-qita-copy:before {
+  content: "\f443";
+}
+
+.icon-wendang-copy:before {
+  content: "\f444";
+}
+
+.icon-wendang-copy1:before {
+  content: "\f445";
+}
+
+.icon-quanbu-copy:before {
+  content: "\f446";
+}
+
+.icon-yinpin-copy:before {
+  content: "\f447";
 }
 
 .icon-logo:before {
