@@ -1,7 +1,7 @@
 <template>
   <div>
     <Dialog
-      :show="dialogConfig.show"
+      ref="dialogRef"
       :title="dialogConfig.title"
       :buttons="dialogConfig.buttons"
       width="500px"
@@ -16,7 +16,7 @@
       >
         <!--input输入-->
         <el-form-item label="昵称" prop="">
-          {{ formData.nickName }}
+          {{ formData.userName }}
         </el-form-item>
         <!--textarea输入-->
         <el-form-item label="头像" prop="">
@@ -40,7 +40,6 @@ export default {
   data() {
     return {
       formData: {},
-      formDataRef: null,
       dialogConfig: {
         show: false,
         title: "修改头像",
@@ -49,7 +48,7 @@ export default {
             type: "primary",
             text: "确定",
             click: (e) => {
-              submitForm();
+              this.submitForm();
             },
           },
         ],
@@ -60,11 +59,12 @@ export default {
     show(data) {
       this.formData = Object.assign({}, data);
       this.formData.avatar = { userId: data.userId, Avatar: data.avatar };
-      this.dialogConfig = true;
+      this.dialogConfig.show = true;
+      this.$refs.dialogRef.showDialog();
     },
     async submitForm(){
       if(!(this.formData.avatar instanceof File)){
-        this.dialogConfig.show = false;
+        this.$refs.dialogRef.closeDialog();
         return;
       }
       let res = await request({
@@ -74,7 +74,7 @@ export default {
         }
       });
       if(!res) return;
-      this.dialogConfig.show = false;
+      this.$refs.dialogRef.closeDialog();
       const cookeUserInfo = this.$cookies.get("userInfo");
       delete cookeUserInfo.avatar;
       this.$cookies.set("userInfo", cookeUserInfo, 0);

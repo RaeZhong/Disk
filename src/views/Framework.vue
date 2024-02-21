@@ -104,7 +104,7 @@
 <script>
 import { nextTick } from 'vue';
 import request from "@/utils/Request.js";
-import UpdateAvatar from './updateAvatar.vue';
+import UpdateAvatar from './UpdateAvatar.vue';
 import UpdatePassword from './UpdatePassword.vue';
 import Uploader from "@/views/main/Uploader.vue";
 import Avatar from '@/components/Avatar.vue';
@@ -223,10 +223,7 @@ export default {
       ],
       currentMenu: {},
       currentPath: null,
-
       useSpaceInfo: { useSpace: 0, totalSpace: 1 },
-
-      updateAvatarRef: null,
       updatePasswordRef: null,
     };
   },
@@ -271,17 +268,21 @@ export default {
     },
     reloadAvatar() {
       this.userInfo = this.$cookies.get("userInfo");
-      this.timestamp = new Date.getTime();
+      this.timestamp = new Date().getTime();
     },
     updatePassword() {
-      this.updatePasswordRef.show();
+      this.$refs.updatePasswordRef.show();
     },
     logout() {
-      confirm(`你确定要删除退出吗`, async () => {
+      this.$confirm('你确定要删除退出吗','提示',{
+        confirmButtonText:'确认',
+        cancelButtonText:'取消',
+      }).then( async() => {
         let res = await request({
           url: frameApi.logout,
         });
         if (!res) return;
+        this.$cookies.remove();
         this.$router.push("/login");
       })
     }

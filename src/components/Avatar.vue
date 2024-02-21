@@ -18,7 +18,7 @@ export default {
     userId: String,
     avatar: String,
     timestamp: {
-      type: String,
+      type: Number,
       default: 0,
     },
     width: {

@@ -1,15 +1,28 @@
 <template>
   <div>
-    <el-dialog :show-close="showClose" :draggable="true" :model-value="show" :close-on-click-modal="false" :title="title"
-      class="cust-dialog" :top="top + 'px'" :width="width" @close="close">
-      <div class="dialog-body" :style="dialogBodyStyle">
+    <el-dialog 
+      :show-close="showClose" 
+      :draggable="true" 
+      v-model="show" 
+      :close-on-click-modal="false" 
+      :title="title"
+      class="cust-dialog" 
+      :top="top + 'px'" 
+      :width="width" 
+      @close="close"
+    >
+      <div class="dialog-body" :style="{ 'max-height': maxHeight + 'px', padding: padding + 'px' }">
         <slot></slot>
       </div>
-      <template #footer>
+      <template v-if="(buttons && buttons.length > 0) || showCancel">
         <div class="dialog-footer">
-          <el-button @click="close">取消</el-button>
-          <el-button type="primary" @click="btn.click">
-            {{ btn.text }}
+          <el-button link @click="close" v-if="showCancel"> 取消 </el-button>
+          <el-button
+            v-for="btn in buttons"
+            :type="btn.type || 'primary'"
+            @click="btn.click"
+          >
+          {{ btn.text }}
           </el-button>
         </div>
       </template>
@@ -18,16 +31,11 @@
 </template>
 
 <script>
-//const maxHeight = window.innerHeight - props.top - 100;
 
 export default {
   props: {
     title: {
       type: String,
-    },
-    show: {
-      type: Boolean,
-      default: false,
     },
     showClose: {
       type: Boolean,
@@ -55,17 +63,20 @@ export default {
   },
   data() {
     return {
-      dialogBodyStyle: {
-        width: "30%",
-        padding: "15px",
-        top: 50,
-      },
+      maxHeight : window.innerHeight - top - 100,
+      show: false,
     };
   },
   methods: {
     close() {
       this.$emit("close");
     },
+    showDialog(){
+      this.show = true;
+    },
+    closeDialog(){
+      this.show = false;
+    }
   },
 };
 </script>
