@@ -13,7 +13,7 @@
               <span class="iconfont icon-transfer"></span>
             </template>
             <template #default>
-              <Uploader ref="uploader" @uploadCallback="uploadCallbackHandler"></Uploader>
+              <Uploader ref="uploaderRef" @uploadCallback="uploadCallbackHandler"></Uploader>
             </template>
           </el-popover>
 
@@ -102,17 +102,17 @@
 </template>
 
 <script>
-import { nextTick } from 'vue';
 import request from "@/utils/Request.js";
 import UpdateAvatar from './UpdateAvatar.vue';
 import UpdatePassword from './UpdatePassword.vue';
 import Uploader from "@/views/main/Uploader.vue";
 import Avatar from '@/components/Avatar.vue';
+import Main  from "./main/Main.vue";
 import frameApi from '@/api/frame.js';
 
 export default {
   components: {
-    UpdateAvatar, UpdatePassword, Avatar, Uploader
+    UpdateAvatar, UpdatePassword, Avatar, Uploader, Main
   },
   data() {
     return {
@@ -120,11 +120,6 @@ export default {
       //上传窗口
       showUploarder: false,
       timestamp: 0,
-      //添加的文件
-      uploaderRef: null,
-      //文件回调
-      routerViewRef: null,
-
       //路由
       menus: [
         {
@@ -224,7 +219,6 @@ export default {
       currentMenu: {},
       currentPath: null,
       useSpaceInfo: { useSpace: 0, totalSpace: 1 },
-      updatePasswordRef: null,
     };
   },
   created() {
@@ -234,12 +228,13 @@ export default {
     addFile(data) {
       const { file, filePid } = data;
       this.showUploarder = true;
-      this.uploaderRef.addFile(file, filePid);
+      console.log(data);
+      this.$refs.uploaderRef.addFile(file, filePid);
     },
     uploadCallbackHandler() {
-      nextTick(() => {
-        this.routerViewRef.reload();
-        getUseSpace();
+      this.$nextTick(() => {
+        this.$refs.routerViewRef.reload();
+        this.getUseSpace();
       });
     },
     jump(data) {

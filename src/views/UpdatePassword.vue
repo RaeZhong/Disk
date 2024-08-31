@@ -1,29 +1,11 @@
 <template>
   <div>
-    <Dialog
-      ref="dialogRef"
-      :title="dialogConfig.title"
-      :buttons="dialogConfig.buttons"
-      width="500px"
-      :showCancel="true"
-      @close="dialogConfig.show = false"
-    >
-      <el-form
-        :model="formData"
-        :rules="rules"
-        ref="formDataRef"
-        label-width="80px"
-        @submit.prevent
-      >
+    <Dialog ref="dialogRef" :title="dialogConfig.title" :buttons="dialogConfig.buttons" width="500px" :showCancel="true"
+      @close="dialogConfig.show = false">
+      <el-form :model="formData" :rules="rules" ref="formDataRef" label-width="80px" @submit.prevent>
         <!--input输入-->
         <el-form-item label="新密码" prop="password">
-          <el-input
-            type="password"
-            size="large"
-            placeholder="请输入密码"
-            v-model="formData.password"
-            show-password
-          >
+          <el-input type="password" size="large" placeholder="请输入密码" v-model="formData.password" show-password>
             <template #prefix>
               <span class="iconfont icon-password"></span>
             </template>
@@ -31,13 +13,7 @@
         </el-form-item>
         <!--input输入-->
         <el-form-item label="确认密码" prop="rePassword">
-          <el-input
-            type="password"
-            size="large"
-            placeholder="请再次输入密码"
-            v-model="formData.rePassword"
-            show-password
-          >
+          <el-input type="password" size="large" placeholder="请再次输入密码" v-model="formData.rePassword" show-password>
             <template #prefix>
               <span class="iconfont icon-password"></span>
             </template>
@@ -51,7 +27,7 @@
 <script>
 import request from "@/utils/Request.js";
 import message from "@/utils/Message.js";
-import verify from "@/utils/Verfiy.js";
+import verify from "@/utils/Verify.js";
 import Dialog from '@/components/Dialog.vue';
 
 export default {
@@ -60,7 +36,7 @@ export default {
     Dialog
   },
   data() {
-    const checkRePassword = (rule, value, callback) =>  {
+    const checkRePassword = (rule, value, callback) => {
       if (value !== this.formData.rePassword) {
         callback(new Error(rule.message));
       } else {
@@ -101,7 +77,7 @@ export default {
     };
   },
   methods: {
-    show(){
+    show() {
       this.$refs.dialogRef.showDialog();
       this.$nextTick(() => {
         console.log(this)
@@ -109,16 +85,16 @@ export default {
         this.formData = {};
       });
     },
-    async submitForm(){
-      this.$refs.formDataRef.validate(async(valid) => {
-        if(!valid) return;
+    async submitForm() {
+      this.$refs.formDataRef.validate(async (valid) => {
+        if (!valid) return;
         let res = await request({
           url: "updatePassword",
-          params:{
+          params: {
             password: this.formData.password,
           }
         });
-        if(!res) return;
+        if (!res) return;
         this.$refs.dialogRef.closeDialog();
         message.success("密码修改成功");
       })

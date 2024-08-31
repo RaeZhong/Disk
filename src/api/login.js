@@ -1,9 +1,12 @@
 const api = {
-  checkCode: "api/checkCode",
-  sendEmailCode: "/sendEmailCode",
-  register:"/register",
-  login:"/login",
-  resetPwd: "/resetPwd",
+  loadDataList: "/file/loadDataList",
+  rename: "/file/rename",
+  newFoloder: "/file/newFoloder",
+  getFolderInfo: "/file/getFolderInfo",
+  delFile: "/file/delFile",
+  changeFileFolder: "/file/changeFileFolder",
+  createDownloadUrl: "/file/createDownloadUrl",
+  download: "/api/file/download",
 };
 
 export default api;
