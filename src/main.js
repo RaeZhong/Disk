@@ -13,6 +13,16 @@ import Verify from './utils/Verify'
 import Message from './utils/Message'
 import Request from './utils/Request'
 
+import Dialog from "@/components/Dialog.vue"
+import Avatar from "@/components/Avatar.vue"
+import Table from "@/components/Table.vue"
+import Icon from "@/components/Icon.vue"
+import NoData from "@/components/NoData.vue"
+import FolderSelect from "@/components/FolderSelect.vue"
+import Navigation from "@/components/Navigation.vue"
+import Preview from "@/components/Preview.vue"
+import Window from "@/components/Window.vue"
+
 const app = createApp(App)
 app.use(ElementPlus)
 app.use(router)
@@ -22,5 +32,15 @@ app.config.globalProperties.Verify = Verify;
 app.config.globalProperties.Message = Message;
 app.config.globalProperties.Request = Request;
 app.config.globalProperties.VueCookies = VueCookies;
+
+app.component('Dialog', Dialog)
+app.component('Avatar', Avatar)
+app.component('Table', Table)
+app.component('Icon', Icon)
+app.component('NoData', NoData)
+app.component('FolderSelect', FolderSelect)
+app.component('Navigation', Navigation)
+app.component('Preview', Preview)
+app.component('Window', Window)
 
 app.mount('#app')
