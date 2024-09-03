@@ -1,19 +1,8 @@
 <template>
   <div>
-    <Dialog
-      ref="dialogRef"
-      :title="dialogConfig.title"
-      :buttons="dialogConfig.buttons"
-      width="500px"
-      :showCancel="true"
-      @close="dialogConfig.show = false"
-    >
-      <el-form
-        :model="formData"
-        ref="formDataRef"
-        label-width="80px"
-        @submit.prevent
-      >
+    <Dialog ref="dialogRef" :show="dialogConfig.show" :title="dialogConfig.title" :buttons="dialogConfig.buttons"
+      width="500px" :showCancel="true" @close="dialogConfig.show = false">
+      <el-form :model="formData" ref="formDataRef" label-width="80px" @submit.prevent>
         <!--input输入-->
         <el-form-item label="昵称" prop="">
           {{ formData.userName }}
@@ -27,59 +16,61 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import AvatarUpload from "@/components/AvatarUpload.vue";
-import request from "@/utils/Request.js";
-import Dialog from '@/components/Dialog.vue';
+import { ref, reactive, getCurrentInstance } from "vue";
+import { useRouter, useRoute } from "vue-router"
 
-export default {
-  name: "UpdateAvatar",
-  components:{
-    Dialog, AvatarUpload
-  },
-  data() {
-    return {
-      formData: {},
-      dialogConfig: {
-        show: false,
-        title: "修改头像",
-        buttons: [
-          {
-            type: "primary",
-            text: "确定",
-            click: (e) => {
-              this.submitForm();
-            },
-          },
-        ],
-      },
-    };
-  },
-  methods: {
-    show(data) {
-      this.formData = Object.assign({}, data);
-      this.formData.avatar = { userId: data.userId, Avatar: data.avatar };
-      this.dialogConfig.show = true;
-      this.$refs.dialogRef.showDialog();
-    },
-    async submitForm(){
-      if(!(this.formData.avatar instanceof File)){
-        this.$refs.dialogRef.closeDialog();
-        return;
-      }
-      let res = await request({
-        url : "updateUserAvatar",
-        params:{
-          avatar: this.formData.avatar,
-        }
-      });
-      if(!res) return;
-      this.$refs.dialogRef.closeDialog();
-      const cookeUserInfo = this.$cookies.get("userInfo");
-      delete cookeUserInfo.avatar;
-      this.$cookies.set("userInfo", cookeUserInfo, 0);
-      this.$emit("updateAvatar");
-    }
-  },
+const { proxy } = getCurrentInstance();
+const router = useRouter();
+const route = useRoute();
+
+const api = {
+  updateUserAvatar: "updateUserAvatar",
 }
+
+const formData = ref({});
+const formDataRef = ref();
+
+const show = (data) => {
+  formData.value = Object.assign({}, data);
+  formData.value.avatar = { userId: data.userId, Avatar: data.avatar };
+  dialogConfig.value.show = true;
+};
+
+defineExpose({ show });
+
+//弹出框
+const dialogConfig = ref({
+  show: false,
+  title: "修改头像",
+  buttons: [
+    {
+      type: "primary",
+      text: "确定",
+      click: (e) => {
+        submitForm();
+      },
+    },
+  ],
+});
+
+const emit = defineEmits(["updateAvatar"]);
+const submitForm = async () => {
+  if (!(formData.value.avatar instanceof File)) {
+    dialogConfig.value.show = false;
+  }
+  let res = await proxy.Request({
+    url: api.updateUserAvatar,
+    params: {
+      avatar: formData.value.avatar,
+    }
+  });
+  if (!res) return;
+  dialogConfig.value.show = false;
+  const cookeUserInfo = proxy.VueCookies.get("userInfo");
+  delete cookeUserInfo.avatar;
+  proxy.VueCookies.set("userInfo", cookeUserInfo, 0);
+  emit("updateAvatar");
+};
 </script>

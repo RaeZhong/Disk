@@ -102,7 +102,6 @@
 </template>
 
 <script>
-import request from "@/utils/Request.js";
 import UpdateAvatar from './UpdateAvatar.vue';
 import UpdatePassword from './UpdatePassword.vue';
 import Uploader from "@/views/main/Uploader.vue";
