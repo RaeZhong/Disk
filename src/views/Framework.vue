@@ -44,9 +44,9 @@
         <div class="left-sider">
           <div class="menu-list">
             <div @click="jump(item)" :class="[
-              'menu-item',
-              item.menuCode == currentMenu.menuCode ? 'active' : '',
-            ]" v-for="item in menus">
+            'menu-item',
+            item.menuCode == currentMenu.menuCode ? 'active' : '',
+          ]" v-for="item in menus">
               <template v-if="item.allShow || (!item.allShow && userInfo.isAdmin)">
                 <div :class="['iconfont', 'icon-' + item.icon]"></div>
                 <div class="text">
@@ -56,9 +56,7 @@
             </div>
           </div>
           <div class="menu-sub-list">
-            <div 
-              :class="['menu-item-sub', currentPath == sub.path ? 'active' : '']" 
-              @click="jump(sub)"
+            <div :class="['menu-item-sub', currentPath == sub.path ? 'active' : '']" @click="jump(sub)"
               v-for="sub in currentMenu.children">
               <span :class="['iconfont', 'icon-' + sub.icon]" v-if="sub.icon"></span>
               <span class="text">{{ sub.name }}</span>
@@ -70,9 +68,9 @@
               <div>空间使用</div>
               <div class="percent">
                 <el-progress :percentage="Math.floor(
-                  (useSpaceInfo.useSpace / useSpaceInfo.totalSpace) * 10000
-                ) / 100
-                  " color="#40eff">
+            (useSpaceInfo.useSpace / useSpaceInfo.totalSpace) * 10000
+          ) / 100
+            " color="#40eff">
                 </el-progress>
               </div>
 
@@ -101,198 +99,220 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import UpdateAvatar from './UpdateAvatar.vue';
 import UpdatePassword from './UpdatePassword.vue';
 import Uploader from "@/views/main/Uploader.vue";
 import Avatar from '@/components/Avatar.vue';
-import Main  from "./main/Main.vue";
-import frameApi from '@/api/frame.js';
+import Main from "./main/Main.vue";
+import {
+  ref,
+  reactive,
+  getCurrentInstance,
+  watch,
+  nextTick,
+  computed,
+} from "vue";
+import { useRouter, useRoute } from "vue-router";
+const { proxy } = getCurrentInstance();
+const router = useRouter();
+const route = useRoute();
 
-export default {
-  components: {
-    UpdateAvatar, UpdatePassword, Avatar, Uploader, Main
+const api = {
+  getUseSpace: "/getUseSpace",
+  logout: "/logout",
+};
+
+const showUploarder = ref(false);
+const uploaderRef = ref();
+//上传文件
+const addFile = (data) => {
+  const { file, filePid } = data;
+  showUploarder.value = true;
+  uploaderRef.value.addFile(file, filePid);
+};
+
+//刷新文件列表
+const routerViewRef = ref();
+const uploadCallbackHandler = () => {
+  nextTick(() => {
+    routerViewRef.value.reload();
+    getUseSpace();
+  })
+};
+
+const timestamp = ref(0);
+const userInfo = ref(proxy.VueCookies.get("userInfo"));
+
+const menus = [
+  {
+    icon: "cloude",
+    name: "首页",
+    menuCode: "main",
+    path: "/main/all",
+    allShow: true,
+    children: [
+      {
+        icon: "all",
+        name: "全部",
+        category: "all",
+        path: "/main/all",
+      },
+      {
+        icon: "video",
+        name: "视频",
+        category: "video",
+        path: "/main/video",
+      },
+      {
+        icon: "music",
+        name: "音频",
+        category: "music",
+        path: "/main/music",
+      },
+      {
+        icon: "image",
+        name: "图片",
+        category: "image",
+        path: "/main/image",
+      },
+      {
+        icon: "doc",
+        name: "文档",
+        category: "doc",
+        path: "/main/doc",
+      },
+      {
+        icon: "more",
+        name: "其他",
+        category: "others",
+        path: "/main/others",
+      },
+    ],
   },
-  data() {
-    return {
-      userInfo: {},
-      //上传窗口
-      showUploarder: false,
-      timestamp: 0,
-      //路由
-      menus: [
-        {
-          icon: "cloude",
-          name: "首页",
-          menuCode: "main",
-          path: "/main/all",
-          allShow: true,
-          children: [
-            {
-              icon: "all",
-              name: "全部",
-              category: "all",
-              path: "/main/all",
-            },
-            {
-              icon: "video",
-              name: "视频",
-              category: "video",
-              path: "/main/video",
-            },
-            {
-              icon: "music",
-              name: "音频",
-              category: "music",
-              path: "/main/music",
-            },
-            {
-              icon: "image",
-              name: "图片",
-              category: "image",
-              path: "/main/image",
-            },
-            {
-              icon: "doc",
-              name: "文档",
-              category: "doc",
-              path: "/main/doc",
-            },
-            {
-              icon: "more",
-              name: "其他",
-              category: "others",
-              path: "/main/others",
-            },
-          ],
-        },
-        {
-          path: "/myshare",
-          icon: "share",
-          name: "分享",
-          menuCode: "share",
-          allShow: true,
-          children: [
-            {
-              name: "分享记录",
-              path: "/myshare",
-            },
-          ],
-        },
-        {
-          path: "/recycle",
-          icon: "del",
-          name: "回收站",
-          menuCode: "recycle",
-          tips: "回收站为你保存10天内删除的文件",
-          allShow: true,
-          children: [
-            {
-              name: "删除的文件",
-              path: "/recycle",
-            },
-          ],
-        },
-        {
-          path: "/settings/fileList",
-          icon: "settings",
-          name: "设置",
-          menuCode: "settings",
-          allShow: false,
-          children: [
-            {
-              name: "用户文件",
-              path: "/settings/fileList",
-            },
-            {
-              name: "用户管理",
-              path: "/settings/userList",
-            },
-            {
-              path: "/settings/sysSetting",
-              name: "系统设置",
-            },
-          ],
-        },
-      ],
-      currentMenu: {},
-      currentPath: null,
-      useSpaceInfo: { useSpace: 0, totalSpace: 1 },
-    };
+  {
+    path: "/myshare",
+    icon: "share",
+    name: "分享",
+    menuCode: "share",
+    allShow: true,
+    children: [
+      {
+        name: "分享记录",
+        path: "/myshare",
+      },
+    ],
   },
-  created() {
-    this.userInfo = this.$cookies.get("userInfo");
+  {
+    path: "/recycle",
+    icon: "del",
+    name: "回收站",
+    menuCode: "recycle",
+    tips: "回收站为你保存10天内删除的文件",
+    allShow: true,
+    children: [
+      {
+        name: "删除的文件",
+        path: "/recycle",
+      },
+    ],
   },
-  methods: {
-    addFile(data) {
-      const { file, filePid } = data;
-      this.showUploarder = true;
-      console.log(data);
-      this.$refs.uploaderRef.addFile(file, filePid);
-    },
-    uploadCallbackHandler() {
-      this.$nextTick(() => {
-        this.$refs.routerViewRef.reload();
-        this.getUseSpace();
-      });
-    },
-    jump(data) {
-      if (!data.path || data.menuCode == this.currentMenu.menuCode) {
-        return;
-      }
-      this.$router.push(data.path);
-    },
-    setMenu(menuCode, path) {
-      const menu = this.menus.find((item) => {
-        return item.menuCode === menuCode;
-      });
-      this.currentMenu = menu;
-      this.currentPath = path;
-    },
-    async getUseSpace() {
-      let res = await request({
-        url: frameApi.getUseSpace,
-        showLoading: false,
-      });
-      if (!res) return;
-      this.useSpaceInfo = res.data;
-    },
-    updateAvatar() {
-      this.$refs.updateAvatarRef.show(this.userInfo);
-    },
-    reloadAvatar() {
-      this.userInfo = this.$cookies.get("userInfo");
-      this.timestamp = new Date().getTime();
-    },
-    updatePassword() {
-      this.$refs.updatePasswordRef.show();
-    },
-    logout() {
-      this.$confirm('你确定要删除退出吗','提示',{
-        confirmButtonText:'确认',
-        cancelButtonText:'取消',
-      }).then( async() => {
-        let res = await request({
-          url: frameApi.logout,
-        });
-        if (!res) return;
-        this.$cookies.remove();
-        this.$router.push("/login");
-      })
+  {
+    path: "/settings/fileList",
+    icon: "settings",
+    name: "设置",
+    menuCode: "settings",
+    allShow: false,
+    children: [
+      {
+        name: "用户文件",
+        path: "/settings/fileList",
+      },
+      {
+        name: "用户管理",
+        path: "/settings/userList",
+      },
+      {
+        path: "/settings/sysSetting",
+        name: "系统设置",
+      },
+    ],
+  },
+];
+
+const currentMenu = ref({});
+const currentPath = ref();
+
+//菜单跳转
+const jump = (date) => {
+  if (!data.path || data.menuCode == currentMenu.value.menuCode) {
+    return;
+  }
+  router.push(data.path)
+};
+
+//菜单栏当前
+const setMenu = (menuCode, path) => {
+  const menu = menus.find((item) => {
+    return item.menuCode == menuCode;
+  });
+  currentMenu.value = menu;
+  currentPath.value = path
+};
+
+watch(
+  () => route,
+  (newVal, oldVal) => {
+    if (newVal.meta.menuCode) {
+      setMenu(newVal.meta.menuCode, newVal.path);
     }
   },
-  watch: {
-    $route: {
-      handler(newVal, oldVal) {
-        if (newVal.meta.menuCode) {
-          this.setMenu(newVal.meta.menuCode, newVal.path);
-        }
-      },
-      deep: true,
-      immediate: true
-    },
-  }
+  { immediate: true, deep: true }
+);
+
+//头像
+const updateAvatarRef = ref();
+const updateAvatar = () => {
+  updateAvatarRef.value.show(userInfo.value);
 };
+const reloadAvatar = () => {
+  userInfo.value = proxy.VueCookies.get("userInfo");
+  timestamp.value = new Date().getTime();
+};
+
+//密码
+const updatePasswordRef = ref();
+const updatePassword = () => {
+  updateAvatarRef.value.show();
+}
+
+//退出登录
+const logout = () => {
+  alert(`你确定要退出登录吗？`, async () => {
+    let res = await proxy.Request({
+      url: api.logout,
+    });
+    if (!res) {
+      return;
+    }
+    proxy.VueCookies.remove("userInfo");
+    router.push("/login");
+  });
+};
+
+//使用空间
+const useSpaceInfo = ref({ useSpace: 0, totalSpace: 1 });
+const getUseSpace = async () => {
+  let res = await proxy.Request({
+    url: api.getUseSpace,
+    showLoading: false,
+  });
+  if (!res) {
+    return;
+  }
+  useSpaceInfo.value = res.data;
+};
+getUseSpace();
 </script>
 
 <style lang="scss" scoped>
@@ -378,7 +398,7 @@ export default {
           color: #7e7e7e;
         }
 
-        .text{
+        .text {
           color: #7e7e7e;
         }
       }
@@ -387,6 +407,7 @@ export default {
         .iconfont {
           color: #a9b0ff;
         }
+
         .text {
           color: #8b95fb;
         }
@@ -417,15 +438,17 @@ export default {
         .text {
           font-size: 13px;
           font-weight: 500;
-          color:#5b5b5b;
+          color: #5b5b5b;
         }
       }
 
       .active {
         background: #eef9fe;
+
         .iconfont {
           color: #a9b0ff;
         }
+
         .text {
           color: #8b95fb;
         }
@@ -460,7 +483,7 @@ export default {
           .iconfont {
             cursor: pointer;
             margin-right: 20px;
-            color:  #a9b0ff;
+            color: #a9b0ff;
           }
         }
       }
