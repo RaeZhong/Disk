@@ -92,7 +92,7 @@ const request = (config) => {
     "X-Request-With": "XMLHttpRequest",
   };
 
-  return new Promise((resolve,reject) => {
+  /* return new Promise((resolve,reject) => {
     instance
       .post(url, formData, {
         onUploadProgress: (event) => {
@@ -116,10 +116,10 @@ const request = (config) => {
         }
         reject(error);
       });
-  });
-  /*instance.post(url, formData, {
-    onUploadProgress:event => {
-      if(config.uploadProgressCallback) {
+  }); */
+  return instance.post(url, formData, {
+    onUploadProgress: event => {
+      if (config.uploadProgressCallback) {
         config.uploadProgressCallback(event);
       }
     },
@@ -130,13 +130,13 @@ const request = (config) => {
     showError: config.showError
   }).catch(error => {
     console.log(error);
-    if(error.showError) {
-      if(error.showError) {
+    if (error.showError) {
+      if (error.showError) {
         Message.error(error.msg);
       }
       return null;
     }
-  });*/
+  });
 };
 
 export default request;

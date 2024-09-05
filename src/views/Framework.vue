@@ -104,7 +104,6 @@ import UpdateAvatar from './UpdateAvatar.vue';
 import UpdatePassword from './UpdatePassword.vue';
 import Uploader from "@/views/main/Uploader.vue";
 import Avatar from '@/components/Avatar.vue';
-import Main from "./main/Main.vue";
 import {
   ref,
   reactive,

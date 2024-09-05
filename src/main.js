@@ -12,6 +12,7 @@ import VueCookies from 'vue-cookies'
 import Verify from './utils/Verify'
 import Message from './utils/Message'
 import Request from './utils/Request'
+import Utils from './utils/Utils'
 
 import Dialog from "@/components/Dialog.vue"
 import Avatar from "@/components/Avatar.vue"
@@ -32,6 +33,7 @@ app.config.globalProperties.Verify = Verify;
 app.config.globalProperties.Message = Message;
 app.config.globalProperties.Request = Request;
 app.config.globalProperties.VueCookies = VueCookies;
+app.config.globalProperties.Utils = Utils;
 
 app.component('Dialog', Dialog)
 app.component('Avatar', Avatar)

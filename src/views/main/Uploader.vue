@@ -27,7 +27,7 @@
       }}</span>
             <!--上传中-->
             <span class="upload-info" v-if="item.status == STATUS.uploading.value">
-              {{ sizeTostr(item.uploadSize) }}/{{ sizeTostr(item.totalSize) }}
+              {{ proxy.Utils.sizeTostr(item.uploadSize) }}/{{ proxy.Utils.sizeTostr(item.totalSize) }}
             </span>
           </div>
         </div>
@@ -75,7 +75,7 @@ import SparkMD5 from "spark-md5";
 const { proxy } = getCurrentInstance();
 
 const api = {
-  upload: "/file/uploadFil",
+  upload: "/file/uploadFile",
 }
 
 const STATUS = {
@@ -156,7 +156,7 @@ const addFile = async (file, filePid) => {
     fileItem.status = STATUS.emptyfile.value;
     return;
   };
-  let md5FileUid = await this.computeMD5(fileItem);
+  let md5FileUid = await computeMD5(fileItem);
   if (md5FileUid == null) {
     return;
   }
@@ -244,7 +244,7 @@ const computeMD5 = (fileItem) => {
   const delList = ref([]);
   //file.cmd5 = true;
   let loadNext = () => {
-    let start = currentChunk * this.chunkSize;
+    let start = currentChunk * chunkSize;
     let end = start + chunkSize >= file.size ? file.size : start + chunkSize;
     fileReader.readAsArrayBuffer(blobSlice.call(file, start, end));
   };

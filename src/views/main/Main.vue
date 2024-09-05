@@ -111,7 +111,6 @@
 </template>
 
 <script>
-import api from "@/api/login.js";
 import request from "@/utils/Request.js";
 
 export default {
@@ -173,7 +172,7 @@ export default {
         };
         if (params.category != "all") delete params.filePid;
         let res = await request({
-          url: api.loadDataList,
+          url: "",
           showLoading: this.showLoading,
           params,
         });
