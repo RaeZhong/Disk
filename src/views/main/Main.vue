@@ -78,7 +78,7 @@
         </template>
         <template #fileSize="{ index, row }">
           <span v-if="row.fileSize">
-            {{ Utils.sizeToStr(row.fileSize) }}</span>
+            {{ proxy.Utils.sizeTostr(row.fileSize) }}</span>
         </template>
       </Table>
     </div>
@@ -110,138 +110,109 @@
   </div>
 </template>
 
-<script>
-import request from "@/utils/Request.js";
+<script setup>
+import CategoryInfo from "@/js/CategoryInfo.js";
 
-export default {
-  name: 'Main',
-  data() {
-    return {
-      columns: [
-        {
-          label: "文件名",
-          prop: "fileName",
-          scopedSlots: "fileName",
-        },
-        {
-          label: "修改时间",
-          prop: "lastUpdateTime",
-          width: 200,
-        },
-        {
-          label: "大小",
-          prop: "fileSize",
-          scopedSlots: "fileSize",
-          width: 200,
-        },
-      ],
-      tableData: {},
-      tableOptions: {
-        extHeight: 50,
-        selectType: "checkbox",
-      },
-      selectFileIdList: [],
-      fileNameFuzzy: null,
-      showLoading: true,
-      category: null,
-      editing: false,
-      currentFolder: { fileId: 0, },
-      currentMoveFile: {},
-    };
-  },
-  methods: {
-    async addFile(fileData) {
-      console.log(fileData)
-      this.$emit("addFile", { file: fileData.file, filePid: this.currentFolder.fileId });
+import { ref, reactive, getCurrentInstance, nextTick, computed } from "vue";
+import { useRouter, useRoute } from "vue-router";
+const { proxy } = getCurrentInstance();
+const router = useRouter();
+const route = useRoute();
 
-    },
-    reload() {
-      this.showLoading = false;
-      this.loadDataList();
-    },
-    search() { },
-    rowSelected() { },
-    loadDataList() {
-      async () => {
-        let params = {
-          pageNo: this.tableData.pageNo,
-          pageSize: this.tableData.pageSize,
-          fileNameFuzzy: this.fileNameFuzzy,
-          category: this.category,
-          filePid: this.currentFolder.fileId,
-        };
-        if (params.category != "all") delete params.filePid;
-        let res = await request({
-          url: "",
-          showLoading: this.showLoading,
-          params,
-        });
-        if (!res) return;
-        this.tableData = res.data;
-        this.editing = false;
-      }
-    },
-    showOp() {
-      this.tableData.list.forEach((element) => {
-        element.showOp = false;
-      });
-      roe.showOp = true;
-    },
-    //展示操作按钮
-    cancelShowOp(row) {
-      row.showOp = false;
-    },
-    newFolder() {
-      if (this.editing) return;
-      this.tableData.list.unshift({
-        showEdit: true,
-        fileType: 0,
-        fileId: "",
-        filePid: this.currentFolder.fileId,
-      });
-      this.$nextTick(() => {
-        this.$refs.editNameRef.focus();
-      });
-    },
-    editFileName(index) {
-      if (this.tableData.list[0], fileId == "") {
-        this.tableData.list.splice(0, 1);
-        this.tableData.list.forEach((element) => {
-          element.showEdit = false;
-        });
-        let currentData = this.tableData.list[index];
-        currentData.showEdit = true;
+//上传文件
+const emit = defineEmits(["addFile"]);
+const addFile = async (fileDate) => {
+  emit("addFile", { file: fileDate.file, filePid: currentFolder.value.fileId });
+}
 
-        if (currentData.folderType == 0) {
-          currentData.fileNameReal = currentData.fileName.substring(
-            currentData.fileName.indexOf(".")
-          );
-        } else {
-          currentData.fileNameReal = currentData.fileName;
-          currentData.fileSuffix = "";
-        }
-        this.editing = true;
-        this.$nextTick(() => {
-          this.editNameRef.focus();
-        });
-      };
-    },
-    cancelNameEdit(index) { },
-    saveNameEdit(index) { },
-    preview(data) { },
-    navChange(data) { },
-    moveFolder(data) { },
-    moveFolderBatch() { },
-    moveFolderDone() { },
-    delFile(row) { },
-    delFileBatch() { },
-    download() { },
-    share(row) { },
-  },
-  computed: {
-    fileAccept() { },
-  },
+//添加文件回调
+const reload = () => {
+  showLoading.value = false;
+  loadDataList();
 };
+defineExpose({ reload });
+
+// 当前编辑行状态
+const editing = ref(false);
+// 新建文件夹行内填充的内容绑定
+const editNameRef = ref();
+
+const api = {
+  loadDataList: "/file/loadDataList",
+  rename: "/file/rename",
+  newFoloder: "/file/newFoloder",
+  getFolderInfo: "/file/getFolderInfo",
+  delFile: "/file/delFile",
+  changeFileFolder: "/file/changeFileFolder",
+  createDownloadUrl: "/file/createDownloadUrl",
+  download: "/api/file/download",
+};
+const showLoading = ref(true);
+const category = ref();
+const currentFolder = ref({
+  fileId: 0
+});
+const tableOptions = {
+  extHeight: 50,
+  selectType: "checkbox",
+};
+const tableData = ref({});
+const fileNameFuzzy = ref();
+
+const loadDataList = async () => {
+  let params = {
+    pageNo: tableData.value.pageNo,
+    pageSize: tableData.value.pageSize,
+    fileNameFuzzy: fileNameFuzzy.value,
+    category: category.value,
+    filePid: currentFolder.value.fileId,
+  };
+  if (params.category != "all") {
+    delete params.filePid;
+  }
+  let res = await proxy.Request({
+    url: api.loadDataList,
+    showLoading: showLoading,
+    params,
+  });
+  if (!res) {
+    return;
+  }
+  tableData.value = res.data;
+  editing.value = false;
+};
+
+const fileAccept = computed(() => {
+  const categoryItem = CategoryInfo[category.value];
+  return categoryItem ? categoryItem.accept : "*";
+})
+
+const columns = [
+  {
+    label: "文件名",
+    prop: "fileName",
+    scopedSlots: "fileName",
+  },
+  {
+    label: "修改时间",
+    prop: "lastUpdateTime",
+    width: 200,
+  },
+  {
+    label: "大小",
+    prop: "fileSize",
+    scopedSlots: "fileSize",
+    width: 200,
+  },
+];
+
+const search = () => {
+  showLoading.value = true;
+  loadDataList();
+};
+
+const selectFileIdList = ref([]);
+
 </script>
 
 <style lang="scss" scoped>

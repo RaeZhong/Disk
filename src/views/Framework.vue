@@ -243,7 +243,7 @@ const currentMenu = ref({});
 const currentPath = ref();
 
 //菜单跳转
-const jump = (date) => {
+const jump = (data) => {
   if (!data.path || data.menuCode == currentMenu.value.menuCode) {
     return;
   }

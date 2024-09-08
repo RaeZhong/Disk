@@ -1,151 +1,128 @@
 <template>
   <div>
-    <el-table
-      ref="dataTable"
-      :data="dataSource.list || []"
-      :height="tableHeight"
-      :stripe="options.stripe"
-      :border="options.border"
-      header-row-class-name="table-header-row"
-      highlight-current-row
-      @row-click="handleRowClick"
-      @selection-change="handleSelectionChange"
-    >
+    <el-table ref="dataTable" :data="dataSource.list || []" :height="tableHeight" :stripe="options.stripe"
+      :border="options.border" header-row-class-name="table-header-row" highlight-current-row
+      @row-click="handleRowClick" @selection-change="handleSelectionChange">
       <!--selection选择框-->
-      <el-table-column
-        v-if="options.selectType && options.selectType == 'checkbox'"
-        type="selection"
-        width="50"
-        align="center"
-      ></el-table-column>
+      <el-table-column v-if="options.selectType && options.selectType == 'checkbox'" type="selection" width="50"
+        align="center"></el-table-column>
       <!--序号-->
-      <el-table-column
-        v-if="options.showIndex"
-        label="序号"
-        type="index"
-        width="60"
-        align="center"
-      ></el-table-column>
+      <el-table-column v-if="options.showIndex" label="序号" type="index" width="60" align="center"></el-table-column>
       <!--数据列-->
       <template v-for="(column, index) in columns">
         <template v-if="column.scopedSlots">
-          <el-table-column
-            :key="index"
-            :prop="column.prop"
-            :label="column.label"
-            :align="column.align || 'left'"
-            :width="column.width"
-          >
+          <el-table-column :key="index" :prop="column.prop" :label="column.label" :align="column.align || 'left'"
+            :width="column.width">
             <template #default="scope">
-              <slot
-                :name="column.scopedSlots"
-                :index="scope.$index"
-                :row="scope.row"
-              >
+              <slot :name="column.scopedSlots" :index="scope.$index" :row="scope.row">
               </slot>
             </template>
           </el-table-column>
         </template>
         <template v-else>
-          <el-table-column
-            :key="index"
-            :prop="column.prop"
-            :label="column.label"
-            :align="column.align || 'left'"
-            :width="column.width"
-            :fixed="column.fixed"
-          >
+          <el-table-column :key="index" :prop="column.prop" :label="column.label" :align="column.align || 'left'"
+            :width="column.width" :fixed="column.fixed">
           </el-table-column>
         </template>
       </template>
     </el-table>
     <!-- 分页 -->
     <div class="pagination" v-if="showPagination">
-      <el-pagination
-        v-if="dataSource.totalCount"
-        background
-        :total="dataSource.totalCount"
-        :page-sizes="[15, 30, 50, 100]"
-        :page-size="dataSource.pageSize"
-        :current-page.sync="dataSource.pageNo"
-        :layout="layout"
-        @size-change="handlePageSizeChange"
-        @current-change="handlePageNoChange"
-        style="text-align: right"
-      ></el-pagination>
+      <el-pagination v-if="dataSource.totalCount" background :total="dataSource.totalCount"
+        :page-sizes="[15, 30, 50, 100]" :page-size="dataSource.pageSize" :current-page.sync="dataSource.pageNo"
+        :layout="layout" @size-change="handlePageSizeChange" @current-change="handlePageNoChange"
+        style="text-align: right"></el-pagination>
     </div>
   </div>
 </template>
-<script>
-export default {
-  name:"Table",
-  props:{
-    dataSource:Object,
-    showPagination: {
-      type: Boolean,
-      default: true,
-    },
-    showPageSize: {
-      type: Boolean,
-      default: true,
-    },
-    options: {
-      type: Object,
-      default: {
-        extHeight: 0,
-        showIndex: false,
-      }
-    },
-    column: Array,
-    fetch: Function,
-    initFetch: {
-      type: Boolean,
-      default:true,
-    }
+<script setup>
+import { ref, computed } from "vue";
+
+const emit = defineEmits(["rowSelected", "rowClick"]);
+const props = defineProps({
+  dataSource: Object,
+  showPagination: {
+    type: Boolean,
+    default: true,
   },
-  data() {
-    return {
-      topHeight : 60 + 20 + 30 + 46,
-      tableHeight: 
-        this.options.tableHeight ? this.options.tableHeight
-        : window.innerHeight - topHeight - this.options.extHeight,
-      dataTable,
-    }
+  showPageSize: {
+    type: Boolean,
+    default: true,
   },
-  computed:{
-    layout(){
-      return total,this.showPageSize ? "size":"", prev, pager, next, jumper;
-    }
+  options: {
+    type: Object,
+    default: {
+      extHeight: 0,
+      showIndex: false,
+    },
   },
-  methods:{
-    init(){
-      if(this.initFetch && this.fetch){
-        this.fetch();
-      }
-    },
-    clearSelection(){
-      this.dataTable.clearSelection();
-    },
-    setCurrentRow(rowKey, rowValue){
-      let row = this.dataSource.list.find((item) => {
-        return item[rowKey] === rowValue;
-      });
-      this.dataTable.setCurrentRow(row);
-    },
-    handleRowClick(row){
-      emit("rowClick", row);
-    },
-    handleSelectionChange(size){
-      this.dataSource.pageSize = size;
-      this.dataSource.pageNo = 1;
-      this.fetch();
-    },
-    handlePageNoChange(pageNo){
-      this.dataSource.pageNo = pageNo;
-      this.fetch();
-    }
+  columns: Array,
+  fetch: Function, // 获取数据的函数
+  initFetch: {
+    type: Boolean,
+    default: true,
+  },
+});
+
+// 分页处布局
+const layout = computed(() => {
+  return `total, ${props.showPageSize ? "sizes" : ""
+    }, prev, pager, next, jumper`;
+});
+
+//顶部 60 , 内容区域距离顶部 20， 内容上下内间距 15*2  分页区域高度 46
+const topHeight = 60 + 20 + 30 + 46;
+
+const tableHeight = ref(
+  props.options.tableHeight
+    ? props.options.tableHeight
+    : window.innerHeight - topHeight - props.options.extHeight
+);
+
+const init = () => {
+  if (props.initFetch && props.fetch) {
+    // 获取数据
+    props.fetch();
   }
-}
+};
+init();
+
+const dataTable = ref();
+// 清除选中
+const clearSelection = () => {
+  dataTable.value.clearSelection();
+};
+// 设置行选中
+const setCurrentRow = (rowKey, rowValue) => {
+  let row = props.dataSource.list.find((item) => {
+    return item[rowKey] === rowValue;
+  });
+  dataTable.value.setCurrentRow(row);
+};
+defineExpose({ setCurrentRow, clearSelection });
+
+const handleRowClick = (row) => {
+  emit("rowClick", row);
+};
+// 行选中(多行)
+const handleSelectionChange = (row) => {
+  emit("rowSelected", row);
+};
+
+// 切换每页大小
+const handlePageSizeChange = (size) => {
+  props.dataSource.pageSize = size;
+  props.dataSource.pageNo = 1;
+  // 获取数据
+  props.fetch();
+};
+
+// 切换页码
+const handlePageNoChange = (pageNo) => {
+  props.dataSource.pageNo = pageNo;
+  // 获取数据
+  props.fetch();
+};
 </script>
 
 <style lang="scss" scoped>
@@ -153,6 +130,7 @@ export default {
   padding-top: 10px;
   padding-right: 10px;
 }
+
 el-pagination {
   justify-content: right;
 }
