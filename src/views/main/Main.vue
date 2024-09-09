@@ -106,12 +106,13 @@
     <!--移动-->
     <FolderSelect ref="folderSelectRef" @folderSelect="moveFolderDone"></FolderSelect>
     <!--分享-->
-    <FileShare ref="shareRef"></FileShare>
+    <ShareFile ref="shareRef"></ShareFile>
   </div>
 </template>
 
 <script setup>
 import CategoryInfo from "@/js/CategoryInfo.js";
+import ShareFile from "./ShareFile.vue";
 
 import { ref, reactive, getCurrentInstance, nextTick, computed } from "vue";
 import { useRouter, useRoute } from "vue-router";
@@ -179,6 +180,7 @@ const loadDataList = async () => {
     return;
   }
   tableData.value = res.data;
+  console.log(tableData.value.list)
   editing.value = false;
 };
 
@@ -213,6 +215,214 @@ const search = () => {
 
 const selectFileIdList = ref([]);
 
+const showOp = (row) => {
+  tableData.value.list.forEach((element) => {
+    element.showOp = false;
+  });
+  row.showOp = true;
+}
+
+const newFolder = () => {
+  if (editing.value) return;
+  tableData.value.list.unshift({
+    showEdit: true,
+    fileType: 0,
+    fileId: "",
+    filePid: 0,
+  });
+  nextTick(() => {
+    editNameRef.value.focus();
+  });
+};
+
+const cancelNameEdit = (index) => {
+  const fileDate = tableData.value.list[index];
+  if (fileDate.fileId) {
+    fileDate.showEdit = false;
+  } else {
+    tableData.value.list.splice(index, 1);
+  }
+  editing.value = false;
+};
+
+const saveNameEdit = async (index) => {
+  const { fileId, filePid, fileNameReal } = tableData.value.list[index];
+  if (fileNameReal = "" || fileNameReal.indexOf("/") != -1) {
+    proxy.Message.warning("文件名不能为空且不能含有斜杠");
+    return;
+  };
+  let url = api.rename;
+  if (fileId == "") {
+    url = api.newFoloder;
+  };
+  let res = await proxy.Request({
+    url: url,
+    params: {
+      fileId: fileId,
+      filePid: filePid,
+      fileName: fileNameReal,
+    },
+  });
+  if (!res) return;
+  tableData.value.list[index] = res.data;
+  editing.value = false;
+}
+
+const editFileName = (index) => {
+  if (tableData.value.list[0].fileId == "") {
+    tableData.value.list.splice(0, 1);
+    index--;
+  }
+  tableData.value.list.forEach((element) => {
+    element.showEdit = false;
+  });
+  let currentData = tableData.value.list[index];
+  currentData.showEdit = true;
+  if (currentData.folderType == 0) {
+    currentData.fileNameReal = currentData.fileName.substring(
+      0,
+      currentData.fileName.indexOf(".")
+    );
+    currentData.fileSuffix = currentData.fileName.substring(
+      currentData.fileName.indexOf(".")
+    );
+  } else {
+    currentData.fileNameReal = currentData.fileName;
+    currentData.fileSuffix = "";
+  }
+  editing.value = true;
+  nextTick(() => {
+    editNameRef.value.focus();
+  });
+};
+
+const rowSelected = (rows) => {
+  selectFileIdList.value = [];
+  rows.forEach((item) => {
+    selectFileIdList.value.push(item.fileId);
+  });
+};
+
+const delFile = (row) => {
+  proxy.Confirm(
+    `你确定要删除【${row.fileName}】吗? 删除的文件可在10天内通过回收站还原`,
+    async () => {
+      let result = await proxy.Request({
+        url: api.delFile,
+        params: {
+          fileIds: row.fileId,
+        },
+      });
+      if (!result) {
+        return;
+      }
+      loadDataList();
+    }
+  );
+};
+
+const delFileBatch = () => {
+  if (selectFileIdList.value.length == 0) {
+    return;
+  }
+  proxy.Confirm(
+    `你确定要删除这些文件吗? 删除的文件可在10天内通过回收站还原`,
+    async () => {
+      let result = await proxy.Request({
+        url: api.delFile,
+        params: {
+          fileIds: selectFileIdList.value.join(","),
+        },
+      });
+      if (!result) {
+        return;
+      }
+      loadDataList();
+    }
+  );
+};
+
+const folderSelectRef = ref();
+const currentMoveFile = ref({});
+
+const moveFolder = (data) => {
+  currentMoveFile.value = data;
+  folderSelectRef.value.showFolderDialog(currentFolder.value.fileId);
+};
+
+const moveFolderBatch = () => {
+  currentMoveFile.value = {};
+  folderSelectRef.value.showFolderDialog(currentFolder.value.fileId);
+};
+
+const moveFolderDone = async (folderId) => {
+  if (currentFolder.value.fileId == folderId) {
+    proxy.Message.warning("文件正在当前目录, 无需移动");
+    return;
+  }
+  let fileIdsArray = [];
+  if (currentMoveFile.value.fileId) {
+    fileIdsArray.push(currentMoveFile.value.fileId);
+  } else {
+    fileIdsArray = fileIdsArray.concat(selectFileIdList.value);
+  }
+  let result = await proxy.Request({
+    url: api.changeFileFolder,
+    params: {
+      fileIds: fileIdsArray.join(","),
+      filePid: folderId,
+    },
+  });
+  if (!result) {
+    return;
+  }
+  folderSelectRef.value.close();
+  loadDataList();
+};
+
+const navigationRef = ref();
+const previewRef = ref();
+const preview = (data) => {
+  // 目录
+  if (data.folderType == 1) {
+    navigationRef.value.openFolder(data);
+    return;
+  }
+  // 文件
+  if (data.status != 2) {
+    proxy.Message.warning("文件未完成转码, 无法预览");
+    return;
+  }
+  previewRef.value.showPreview(data, 0);
+};
+
+const navChange = (data) => {
+  const { categoryId, curFolder } = data;
+  currentFolder.value = curFolder;
+  category.value = categoryId;
+  loadDataList();
+};
+
+const download = async (row) => {
+  let result = await proxy.Request({
+    url: api.createDownloadUrl + "/" + row.fileId,
+  });
+  if (!result) {
+    return;
+  }
+  window.location.href = api.download + "/" + result.data;
+};
+
+// 分享
+const shareRef = ref();
+const share = (row) => {
+  shareRef.value.show(row);
+};
+
+const cancelShowOp = (row) => {
+  row.showOp = false;
+};
+loadDataList();
 </script>
 
 <style lang="scss" scoped>

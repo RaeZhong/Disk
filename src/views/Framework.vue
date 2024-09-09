@@ -105,12 +105,7 @@ import UpdatePassword from './UpdatePassword.vue';
 import Uploader from "@/views/main/Uploader.vue";
 import Avatar from '@/components/Avatar.vue';
 import {
-  ref,
-  reactive,
-  getCurrentInstance,
-  watch,
-  nextTick,
-  computed,
+  ref, reactive, getCurrentInstance, watch, nextTick, computed,
 } from "vue";
 import { useRouter, useRoute } from "vue-router";
 const { proxy } = getCurrentInstance();

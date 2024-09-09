@@ -40,90 +40,88 @@
   </div>
 </template>
 
-<script>
-import Dialog from "@/components/Dialog.vue"
-import verify from "@/utils/Verfiy.js";
-import request from "@/utils/Request.js";
-import message from "@/utils/Message.js";
+<script setup>
+import useClipboard from "vue-clipboard3";
+const { toClipboard } = useClipboard();
+import { ref, reactive, getCurrentInstance, nextTick } from "vue";
+const { proxy } = getCurrentInstance();
 
-export default {
-  name: "ShareFile",
-  components: {
-    Dialog,
-  },
-  data() {
-    return {
-      showType: 0,
-      formData: {},
-      rules: {
-        validType: [{ required: true, message: "请选择有效期" }],
-        codeType: [{ required: true, message: "请选择提取码类型" }],
-        code: [
-          { required: true, message: "请输入提取码" },
-          { validator: verify.shareCode, message: "提取码只能是数字字母" },
-          { min: 5, message: "提取码最少5位" },
-        ],
+const shareUrl = ref(document.location.origin + "/share/");
+const api = {
+  shareFile: "/share/shareFile",
+};
+
+//  0:分享表单 1:分享结果
+const showType = ref(0);
+const formData = ref({});
+const formDataRef = ref();
+const rules = {
+  validType: [{ required: true, message: "请选择有效期" }],
+  codeType: [{ required: true, message: "请选择提取码类型" }],
+  code: [
+    { required: true, message: "请输入提取码" },
+    { validator: proxy.Verify.shareCode, message: "请输入提取码" },
+    { min: 5, message: "提取码最少5位" },
+  ],
+};
+
+const showCancel = ref(true);
+const dialogConfig = ref({
+  show: false,
+  title: "分享",
+  buttons: [
+    {
+      type: "primary",
+      text: "确定",
+      click: (e) => {
+        share();
       },
-      showCancel: true,
-      dialogConfig: {
-        title: "分享",
-        buttons: [
-          {
-            type: "primary",
-            text: "确定",
-            click: (e) => {
-              share();
-            },
-          },
-        ],
-      },
-      resultInfo: {},
-    }
-  },
-  methods: {
-    share() {
-      async () => {
-        if (Object.keys(this.resultInfo).length > 0) {
-          this.$refs.dialogRef.showDialog();
-          return;
-        }
-        this.$refs.formDataRef.validate(async (valid) => {
-          if (!valid) {
-            return;
-          }
-          let params = {};
-          Object.assign(params, this.formData);
-          let res = await request({
-            url: "",
-            params: params,
-          });
-          if (!res) return;
-          this.showType = 1;
-          this.resultInfo = res.data;
-          this.dialogConfig.buttons[0].text = "关闭";
-          this.showCancel = false;
-        })
-      }
     },
-    show(data) {
-      this.showCancel = true;
-      this.$refs.dialogRef.showDialog();
-      this.showType = 0;
-      this.resultInfo = {};
-      this.$nextTick(() => {
-        this.$refs.formDataRef.resetField();
-        this.formData = Object.assign({}, data);
-      })
-    },
-    copy(){
-      async() => {
-        await this.$copyText(
-          `链接:${shareUrl.value}${resultInfo.value.shareId} 提取码: ${resultInfo.value.code}`
-        ).then(() => {
-          message.success("复制成功");
-        })
-      }
+  ],
+});
+
+const resultInfo = ref({});
+const share = async () => {
+  if (Object.keys(resultInfo.value).length > 0) {
+    dialogConfig.value.show = false;
+    return;
+  };
+  formDataRef.value.validate(async (valid) => {
+    if (!valid) {
+      return;
     }
-  },
-}
+    let params = {};
+    Object.assign(params, formData.value);
+    let result = await proxy.Request({
+      url: api.shareFile,
+      params: params,
+    });
+    if (!result) {
+      return;
+    }
+    showType.value = 1;
+    resultInfo.value = result.data;
+    dialogConfig.value.buttons[0].text = "关闭";
+    showCancel.value = false;
+  });
+};
+
+const show = (data) => {
+  showType.value = 0;
+  dialogConfig.value.show = true;
+  showCancel.value = true;
+  resultInfo.value = {};
+  nextTick(() => {
+    formDataRef.value.resetFields();
+    formData.value = Object.assign({}, data);
+  });
+};
+defineExpose({ show });
+
+const copy = async () => {
+    await toClipboard(
+      `链接:${shareUrl.value}${resultInfo.value.shareId} 提取码:${resultInfo.value.code}`
+    );
+    proxy.Message.success("复制成功");
+};
 </script>
