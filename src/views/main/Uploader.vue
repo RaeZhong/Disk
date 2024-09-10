@@ -285,6 +285,11 @@ const getFileByUid = (uid) => {
   });
   return file;
 }
+
+const delUpload = (uid, index) => {
+  delList.value.push(uid);
+  fileList.value.splice(index, 1);
+};
 </script>
 
 <style lang="scss" scoped>

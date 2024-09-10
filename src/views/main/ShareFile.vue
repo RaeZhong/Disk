@@ -1,9 +1,9 @@
 <template>
   <div>
-    <Dialog ref="dialogRef" :title="dialogConfig.title" :buttons="dialogConfig.buttons" width="600px"
-      :showCancel="showCancel" @close="dialogConfig.show = false">
+    <Dialog ref="dialogRef" :show="dialogConfig.show" :title="dialogConfig.title" :buttons="dialogConfig.buttons"
+      width="600px" :showCancel="showCancel" @close="dialogConfig.show = false">
       <el-form :model="formData" :rules="rules" ref="formDataRef" label-width="100px" @submit.prevent>
-        <el-form-item label="文件"> {{ formData.fileName }} </el-form-item>
+        <el-form-item label="文件" prop=""> {{ formData.fileName }} </el-form-item>
         <template v-if="showType == 0">
           <el-form-item label="有效期" prop="validType">
             <el-radio-group v-model="formData.validType">
@@ -20,18 +20,18 @@
             </el-radio-group>
           </el-form-item>
           <el-form-item prop="code" v-if="formData.codeType == 0">
-            <el-input clearable placeholder="请输入5位提取码" v-model.trim="formData.code" maxLength="5"
+            <el-input clearable placeholder="请输入5位提取码" v-model="formData.code" maxLength="5"
               :style="{ width: '130px' }"></el-input>
           </el-form-item>
         </template>
         <template v-else>
-          <el-form-item label="分享连接" prop="validType">
+          <el-form-item label="分享连接">
             {{ shareUrl }}{{ resultInfo.shareId }}
           </el-form-item>
-          <el-form-item label="提取码" prop="validType">
+          <el-form-item label="提取码">
             {{ resultInfo.code }}
           </el-form-item>
-          <el-form-item prop="validType">
+          <el-form-item>
             <el-button type="primary" @click="copy">复制链接极提取码</el-button>
           </el-form-item>
         </template>
@@ -119,9 +119,9 @@ const show = (data) => {
 defineExpose({ show });
 
 const copy = async () => {
-    await toClipboard(
-      `链接:${shareUrl.value}${resultInfo.value.shareId} 提取码:${resultInfo.value.code}`
-    );
-    proxy.Message.success("复制成功");
+  await toClipboard(
+    `链接:${shareUrl.value}${resultInfo.value.shareId} 提取码:${resultInfo.value.code}`
+  );
+  proxy.Message.success("复制成功");
 };
 </script>

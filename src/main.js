@@ -46,5 +46,9 @@ app.component('FolderSelect', FolderSelect)
 app.component('Navigation', Navigation)
 app.component('Preview', Preview)
 app.component('Window', Window)
+app.config.globalProperties.globalInfo = {
+  avatarUrl: "/api/getAvatar/",
+  imageUrl: "/api/file/getImage/"
+}
 
 app.mount('#app')
