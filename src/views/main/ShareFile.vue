@@ -32,7 +32,7 @@
             {{ resultInfo.code }}
           </el-form-item>
           <el-form-item>
-            <el-button type="primary" @click="copy">复制链接极提取码</el-button>
+            <el-button type="primary" @click="copy">复制链接以及提取码</el-button>
           </el-form-item>
         </template>
       </el-form>
