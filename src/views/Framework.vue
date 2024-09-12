@@ -43,17 +43,17 @@
       <div class="body">
         <div class="left-sider">
           <div class="menu-list">
-            <div @click="jump(item)" :class="[
+            <template v-for="item in menus">
+              <div v-if="item.allShow || (!item.allShow && userInfo.admin)" @click="jump(item)" :class="[
             'menu-item',
             item.menuCode == currentMenu.menuCode ? 'active' : '',
-          ]" v-for="item in menus">
-              <template v-if="item.allShow || (!item.allShow && userInfo.isAdmin)">
+          ]">
                 <div :class="['iconfont', 'icon-' + item.icon]"></div>
                 <div class="text">
                   {{ item.name }}
                 </div>
-              </template>
-            </div>
+              </div>
+            </template>
           </div>
           <div class="menu-sub-list">
             <div :class="['menu-item-sub', currentPath == sub.path ? 'active' : '']" @click="jump(sub)"
