@@ -22,7 +22,7 @@ import Icon from "@/components/Icon.vue"
 import NoData from "@/components/NoData.vue"
 import FolderSelect from "@/components/FolderSelect.vue"
 import Navigation from "@/components/Navigation.vue"
-import Preview from "@/components/Preview.vue"
+import Preview from '@/components/preview/Preview.vue'
 import Window from "@/components/Window.vue"
 
 const app = createApp(App)
